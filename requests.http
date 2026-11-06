@@ -1,0 +1,76 @@
+@baseUrl = http://localhost:3000
+
+### Тест 1 (валідний): пробіли в назві мають зникнути (TrimPipe), 201 Created і заголовок X-Response-Time
+POST {{baseUrl}}/materials
+Content-Type: application/json
+
+{
+  "title": "   Бетон М300   ",
+  "price": 2200,
+  "unitOfMeasure": "m3",
+  "weightPerUnitKg": 2400,
+  "isHeavyCargo": true
+}
+
+### Тест 2 (заборонене поле): очікується 400 і "property hackerField should not exist"
+POST {{baseUrl}}/materials
+Content-Type: application/json
+
+{
+  "title": "Цегла",
+  "price": 12,
+  "unitOfMeasure": "kg",
+  "weightPerUnitKg": 3.5,
+  "isHeavyCargo": false,
+  "hackerField": "malicious"
+}
+
+### Тест 3 (некоректні типи): рядок замість числа, неправильна одиниця виміру, від'ємна вага
+POST {{baseUrl}}/materials
+Content-Type: application/json
+
+{
+  "title": "Цегла",
+  "price": "дорого",
+  "unitOfMeasure": "pcs",
+  "weightPerUnitKg": -1,
+  "isHeavyCargo": "yes"
+}
+
+### Тест 4 (query-трансформація): limit=5 стає числом; у логах сервера "тип: number"
+GET {{baseUrl}}/materials?limit=5
+
+### Додатково: limit не число, очікується 400
+GET {{baseUrl}}/materials?limit=abc
+
+### Додатково: невідомий query-параметр, очікується 400
+GET {{baseUrl}}/materials?foo=1
+
+### Додатково: неіснуючий запис, очікується 404 в уніфікованому форматі
+GET {{baseUrl}}/materials/99999
+
+### Додатково: часткове оновлення з некоректною ціною, очікується 400
+PATCH {{baseUrl}}/materials/1
+Content-Type: application/json
+
+{
+  "price": -5
+}
+
+### Додатково: коректне часткове оновлення, очікується 200
+PATCH {{baseUrl}}/materials/1
+Content-Type: application/json
+
+{
+  "price": 10.5
+}
+
+### Додатково: замовлення з некоректними даними, очікується 400
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "productId": "2",
+  "quantity": 0,
+  "customerEmail": "wrong"
+}
